@@ -4,7 +4,13 @@
     "version": "1.0",
     "description": "Auto search and play video by api",
     "browser_action": {
-        "default_popup": "popup.html"
+        "default_popup": "popup.html",
+        "default_icon": "icons/gadgets.png",
+        "default_title": "Youtube auto watcher"
+    },
+    "background":{
+        "scripts": ["background.js"],
+        "persistent": false
     },
     "permissions": [
         "scripting",
