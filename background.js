@@ -1,9 +1,13 @@
 // ENTITY
+// const os = require('os');
+// import os from 'os';
 const Info = (function () {
-    const _info = { email: "", ip: "" }
+    const _info = { email: "", ip: "", country: "", hostName: "" }
     const prop = {};
-    prop.setEmail = function (email) { _info.email = email }
-    prop.setIp = function (ip) { _info.ip = ip }
+    prop.setEmail = function (email) { _info.email = email };
+    prop.setIp = function (ip) { _info.ip = ip };
+    prop.setCountry = function (country) { _info.country = country };
+    prop.setHostName = function (host) { _info.hostName = host }
     prop.getInfo = function () { return _info };
     return prop;
 })();
@@ -36,7 +40,7 @@ const Running = (function () {
 
 // Receive Events
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    const { email, ip, start, stop, loginGoogle, loginYoutube } = request;
+    const { email, ip, start, stop, loginGoogle, loginYoutube, doLoginYoutube, country } = request;
     console.log(request);
     if (email) Info.setEmail(email);
     if (ip) Info.setIp(ip);
@@ -46,19 +50,59 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
     };
     if (stop) Running.setStatus(false);
     if (loginGoogle) doLoginGoogle();
+    if (loginYoutube) doLoginYoutube();
+    if (country) Info.setCountry(country);
 })
 
 async function main() {
     await Tab.saveCurrentTab();
-    await loginGoogle();
-    await delay(5000);
-    // await getIp();
-    // await getEmail();
-    // await doLogInfo();
-    // await doWatchVideo();
+    // await loginGoogleIfNotLoggedIn();
+    // await delay(20000); // wait for complete login google
+    // await loginYoutubeIfNotLoggedIn();
+    // await delay(20000); // wait for complete login youtube
+    await getIp();
+    await getEmail();
+    await getCountry();
+    await doLogInfo();
+    await doWatchVideo();
 }
 
-async function loginGoogle() {
+async function loginYoutubeIfNotLoggedIn() {
+    const tab = Tab.getSavedTab();
+    await navigateToURL(tab, 'https://www.youtube.com');
+    await browser.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+            const loginBtn = document.getElementsByClassName('style-scope ytd-masthead')[0];
+            if (loginBtn) browser.runtime.sendMessage({ doLoginYoutube: true });
+        }
+    });
+}
+
+async function doLoginYoutube() {
+    const tab = Tab.getSavedTab();
+    const url = 'https://accounts.google.com/ServiceLogin/signinchooser?service=youtube&uilel=3&passive=true&continue=https%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26app%3Ddesktop%26hl%3Den%26next%3Dhttps%253A%252F%252Fwww.youtube.com%252F&hl=en&ec=65620&ifkv=AWnogHcdvj-hQyT4uKOCQIVfkr0lAhSZKJazrU70cbVN72ouMI3_9TTrSHyfxa6M9mwsYoxgTuPi&flowName=GlifWebSignIn&flowEntry=ServiceLogin'
+    await navigateToURL(tab, url);
+    await browser.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: async () => {
+            const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+            const list = document.getElementsByClassName('lCoei YZVTmd SmR8');
+            for (const item of [...list]) {
+                if (item.innerText.includes('khanhquocdo.test@gmail.com')) {
+                    item.click(); // Sử dụng tài khoản khác
+                    break;
+                }
+            }
+            await delay(2000);
+            document.getElementsByClassName('whsOnd zHQkBf')[0].value = 'Khanhquoc2901_'; // Nhập Mk
+            await delay(1000);
+            document.getElementsByClassName('VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-k8QpJ VfPpkd-LgbsSe-OWXEXe-dgl2Hf nCP5yc AjY5Oe DuMIQc LQeN7 qIypjc TrZEUc lw1w4b')[0].click() // Tiếp theo
+        }
+    });
+}
+
+async function loginGoogleIfNotLoggedIn() {
     const tab = Tab.getSavedTab();
     await navigateToURL(tab, 'https://www.google.com');
     await browser.scripting.executeScript({
@@ -72,14 +116,14 @@ async function loginGoogle() {
 
 async function doLoginGoogle() {
     const tab = Tab.getSavedTab();
-    await navigateToURL(tab, 'https://accounts.google.com/ServiceLogin/signinchooser?hl=vi&passive=true&continue=https%3A%2F%2Fwww.google.com%2F&ec=GAZAmgQ&ifkv=AWnogHcRnNbUmW9EhPc6QoRyxIkXi1DQGtbiSWc-GGZhXi1RdrpSBth-fqcyLZjQIVM1KLpWlU2Ykw&flowName=GlifWebSignIn&flowEntry=ServiceLogin');
+    const url = 'https://accounts.google.com/ServiceLogin/signinchooser?hl=vi&passive=true&continue=https%3A%2F%2Fwww.google.com%2F&ec=GAZAmgQ&ifkv=AWnogHcRnNbUmW9EhPc6QoRyxIkXi1DQGtbiSWc-GGZhXi1RdrpSBth-fqcyLZjQIVM1KLpWlU2Ykw&flowName=GlifWebSignIn&flowEntry=ServiceLogin';
+    await navigateToURL(tab, url);
     await browser.scripting.executeScript({
         target: { tabId: tab.id },
         func: async () => {
             const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
             const list = document.getElementsByClassName('lCoei YZVTmd SmR8');
             for (const item of [...list]) {
-                console.log('loop');
                 if (item.innerText.includes('Sử dụng một tài khoản khác')) {
                     console.log(item.innerText);
                     item.click(); // Sử dụng tài khoản khác
@@ -87,12 +131,12 @@ async function doLoginGoogle() {
                 }
             }
             await delay(2000);
-            document.getElementById('identifierId').value = 'khanhquocdo.dn@gmail.com'; // Nhập tk
-            await delay(2000);
+            document.getElementById('identifierId').value = 'khanhquocdo.test@gmail.com'; // Nhập tk
+            await delay(1000);
             document.getElementsByClassName('VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-k8QpJ VfPpkd-LgbsSe-OWXEXe-dgl2Hf nCP5yc AjY5Oe DuMIQc LQeN7 qIypjc TrZEUc lw1w4b')[0].click() // Tiếp theo
             await delay(2000);
             document.getElementsByClassName('whsOnd zHQkBf')[0].value = 'Khanhquoc2901_'; // Nhập Mk
-            await delay(2000);
+            await delay(1000);
             document.getElementsByClassName('VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-k8QpJ VfPpkd-LgbsSe-OWXEXe-dgl2Hf nCP5yc AjY5Oe DuMIQc LQeN7 qIypjc TrZEUc lw1w4b')[0].click() // Tiếp theo
         }
     });
@@ -122,6 +166,18 @@ async function getEmail() {
         func: () => {
             const email = document.getElementsByClassName('gb_xc')[0]?.getElementsByTagName("div")[2]?.innerText;
             browser.runtime.sendMessage({ email });
+        },
+    })
+}
+
+async function getCountry() {
+    const tab = Tab.getSavedTab();
+    await navigateToURL(tab, 'https://www.youtube.com');
+    await browser.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+            const country = document.getElementById('country-code').innerText;
+            browser.runtime.sendMessage({ country });
         },
     })
 }
@@ -165,7 +221,7 @@ async function doWatchVideo() {
 
 async function navigateToURL(tab, url, _delay) {
     await browser.tabs.update(tab?.id, { url: url });
-    await delay(_delay ? _delay : 1500); // default 1.5s
+    await delay(_delay ? _delay : 5000);
 }
 
 // /**
@@ -189,7 +245,8 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 //API
 const doLogInfo = async () => {
-    const { email, ip } = Info.getInfo();
+    // Info.setHostName(os.hostname());
+    const { email, ip, country, hostName } = Info.getInfo();
     await fetch('https://backend.techlab.asia/api/log/new', {
         method: 'POST',
         mode: 'cors',
@@ -198,7 +255,7 @@ const doLogInfo = async () => {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email, ip, firefox: true })
+        body: JSON.stringify({ email, ip, country, hostName, firefox: true })
     })
 }
 
