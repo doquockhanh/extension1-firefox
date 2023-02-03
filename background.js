@@ -36,7 +36,7 @@ const Running = (function () {
 
 // Receive Events
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    const { email, ip, start, stop } = request;
+    const { email, ip, start, stop, loginGoogle, loginYoutube } = request;
     console.log(request);
     if (email) Info.setEmail(email);
     if (ip) Info.setIp(ip);
@@ -44,12 +44,14 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
         Running.setStatus(true);
         main()
     };
-    if (stop) Running.setStatus(false);;
+    if (stop) Running.setStatus(false);
+    if (loginGoogle) doLoginGoogle();
 })
 
 async function main() {
     await Tab.saveCurrentTab();
     await loginGoogle();
+    await delay(5000);
     // await getIp();
     // await getEmail();
     // await doLogInfo();
@@ -61,25 +63,39 @@ async function loginGoogle() {
     await navigateToURL(tab, 'https://www.google.com');
     await browser.scripting.executeScript({
         target: { tabId: tab.id },
-        func: async () => {
-            const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        func: () => {
             const loginBtn = document.getElementsByClassName('gb_ha gb_ia gb_ee gb_ed')[0];
-            if (!loginBtn) return;
-            console.log('no account, do login');
-            await delay(2000);
-            window.location.href = 'https://accounts.google.com/ServiceLogin/signinchooser?hl=vi&passive=true&continue=https%3A%2F%2Fwww.google.com%2F&ec=GAZAmgQ&ifkv=AWnogHcRnNbUmW9EhPc6QoRyxIkXi1DQGtbiSWc-GGZhXi1RdrpSBth-fqcyLZjQIVM1KLpWlU2Ykw&flowName=GlifWebSignIn&flowEntry=ServiceLogin';
-            await delay(2000);
-            console.log(document.getElementsByClassName('lCoei YZVTmd SmR8'));
-            document.getElementsByClassName('lCoei YZVTmd SmR8')[0].click();; // Sử dụng tài khoản khác
-            await delay(2000)
-            document.getElementById('identifierId').innerText = 'khanhquocdo.qt@gmail.com'; // Nhập tk
-            await delay(2000)
-            document.getElementsByClassName('VfPpkd-Jh9lGc')[0].click(); // Tiếp theo
-            await delay(2000)
-            document.getElementsByClassName('whsOnd zHQkBf')[0].innerText = 'Khanhquoc2901_'; // Nhập Mk
+            if (loginBtn) browser.runtime.sendMessage({ loginGoogle: true });
         }
     });
+}
 
+async function doLoginGoogle() {
+    const tab = Tab.getSavedTab();
+    await navigateToURL(tab, 'https://accounts.google.com/ServiceLogin/signinchooser?hl=vi&passive=true&continue=https%3A%2F%2Fwww.google.com%2F&ec=GAZAmgQ&ifkv=AWnogHcRnNbUmW9EhPc6QoRyxIkXi1DQGtbiSWc-GGZhXi1RdrpSBth-fqcyLZjQIVM1KLpWlU2Ykw&flowName=GlifWebSignIn&flowEntry=ServiceLogin');
+    await browser.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: async () => {
+            const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+            const list = document.getElementsByClassName('lCoei YZVTmd SmR8');
+            for (const item of [...list]) {
+                console.log('loop');
+                if (item.innerText.includes('Sử dụng một tài khoản khác')) {
+                    console.log(item.innerText);
+                    item.click(); // Sử dụng tài khoản khác
+                    break;
+                }
+            }
+            await delay(2000);
+            document.getElementById('identifierId').value = 'khanhquocdo.dn@gmail.com'; // Nhập tk
+            await delay(2000);
+            document.getElementsByClassName('VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-k8QpJ VfPpkd-LgbsSe-OWXEXe-dgl2Hf nCP5yc AjY5Oe DuMIQc LQeN7 qIypjc TrZEUc lw1w4b')[0].click() // Tiếp theo
+            await delay(2000);
+            document.getElementsByClassName('whsOnd zHQkBf')[0].value = 'Khanhquoc2901_'; // Nhập Mk
+            await delay(2000);
+            document.getElementsByClassName('VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-k8QpJ VfPpkd-LgbsSe-OWXEXe-dgl2Hf nCP5yc AjY5Oe DuMIQc LQeN7 qIypjc TrZEUc lw1w4b')[0].click() // Tiếp theo
+        }
+    });
 }
 
 async function getIp() {
