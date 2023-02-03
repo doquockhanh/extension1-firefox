@@ -8,13 +8,26 @@
         "default_icon": "icons/gadgets.png",
         "default_title": "Youtube auto watcher"
     },
-    "background":{
-        "scripts": ["background.js"],
+    "background": {
+        "scripts": [
+            "background.js"
+        ],
         "persistent": false
     },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "background.js"
+            ]
+        }
+    ],
     "permissions": [
         "scripting",
         "tabs",
-        "<all_urls>"
+        "<all_urls>",
+        "webNavigation"
     ]
 }

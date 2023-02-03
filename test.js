@@ -1,9 +1,26 @@
-const a = [];
-for (let i = 0; i < 2000; i++) {
-    a.push(Math.floor(Math.random() * 402));
-}
-console.log(Math.max(...a));
-console.log(Math.min(...a));
+// const a = [];
+// for (let i = 0; i < 2000; i++) {
+//     a.push(Math.floor(Math.random() * 402));
+// }
+// console.log(Math.max(...a));
+// console.log(Math.min(...a));
+
+// const getMails = async () => {
+//     const mail = await fetch('https://backend.techlab.asia/api/event/mail', {
+//         method: 'POST',
+//         mode: 'cors',
+//         cache: 'no-cache',
+//         credentials: 'same-origin',
+//         headers: {
+//             'Content-Type': 'application/json'
+//         },
+//         body: JSON.stringify({ firefox: true })
+//     });
+
+//     return mail.json();
+// }
+
+// console.log(getMails());
 
 // chrome.runtime.onInstalled.addListener(function () {
 //     chrome.contextMenus.create({
@@ -38,7 +55,7 @@ console.log(Math.min(...a));
 //     chrome.runtime.onMessage.removeListener(event);
 // });
 
-// chrome.webNavigation.onCompleted.addListener(function () {
+// browser.webNavigation.onCompleted.addListener(function () {
 //     alert("This is my favorite website!");
 // }, { url: [{ urlMatches: 'https://www.google.com/' }] });
 
@@ -52,3 +69,9 @@ console.log(Math.min(...a));
 //             { code: 'document.body.style.backgroundColor="orange"' });
 //     };
 // });
+
+
+async function navigate(url, callback) {
+    const filter = { url: [{ urlMatches: url }] }
+    browser.webNavigation.onCompleted.addListener(callback, filter);
+}

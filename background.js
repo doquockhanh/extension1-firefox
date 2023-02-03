@@ -194,13 +194,28 @@ async function doWatchVideo() {
     }
 
     async function search(title) {
+        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
         let formatTT = title.split(' ')
         formatTT = formatTT.filter((t) => t.length > 1)
         if (formatTT.length > 8) formatTT.splice(-Math.floor(Math.random() * 2) - 1)
-        const key = formatTT.join('+')
-        const url = 'https://www.youtube.com/results?search_query=' + key;
-        console.log(url);
-        await navigateToURL(tab, url, 5000);
+        const key = formatTT.join(' ');
+        const tab = Tab.getSavedTab();
+        await browser.tabs.executeScript(
+            tab.id,
+            { code: 'const key = ' + key },
+            function () {
+                browser.scripting.executeScript({
+                    target: { tabId: tab.id },
+                    func: async () => {
+                        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+                        document.getElementsByClassName('gsfi ytd-searchbox')[0].value = key;
+                        await delay(1000);
+                        document.getElementById('search-icon-legacy').click();
+                    },
+                });
+            }
+        )
+        await delay(6000);
     }
 
     async function watchVideo() {
