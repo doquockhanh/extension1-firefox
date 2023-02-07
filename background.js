@@ -39,107 +39,28 @@ const Running = (function () {
 // FUNCTION
 
 // Receive Events
-browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((request) => {
     const { email, ip, start, stop, loginGoogle, loginYoutube, doLoginYoutube, country } = request;
     console.log(request);
-    if (email) Info.setEmail(email);
-    if (ip) Info.setIp(ip);
     if (start) {
         Running.setStatus(true);
         main()
     };
+    if (email) Info.setEmail(email);
+    if (ip) Info.setIp(ip);
     if (stop) Running.setStatus(false);
-    if (loginGoogle) doLoginGoogle();
-    if (loginYoutube) doLoginYoutube();
+    // if (loginGoogle) doLoginGoogle();
+    // if (loginYoutube) doLoginYoutube();
     if (country) Info.setCountry(country);
 })
 
 async function main() {
     await Tab.saveCurrentTab();
-    // await loginGoogleIfNotLoggedIn();
-    // await delay(20000); // wait for complete login google
-    // await loginYoutubeIfNotLoggedIn();
-    // await delay(20000); // wait for complete login youtube
     await getIp();
     await getEmail();
     await getCountry();
     await doLogInfo();
     await doWatchVideo();
-}
-
-async function loginYoutubeIfNotLoggedIn() {
-    const tab = Tab.getSavedTab();
-    await navigateToURL(tab, 'https://www.youtube.com');
-    await browser.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => {
-            const loginBtn = document.getElementsByClassName('style-scope ytd-masthead')[0];
-            if (loginBtn) browser.runtime.sendMessage({ doLoginYoutube: true });
-        }
-    });
-}
-
-async function doLoginYoutube() {
-    const tab = Tab.getSavedTab();
-    const url = 'https://accounts.google.com/ServiceLogin/signinchooser?service=youtube&uilel=3&passive=true&continue=https%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26app%3Ddesktop%26hl%3Den%26next%3Dhttps%253A%252F%252Fwww.youtube.com%252F&hl=en&ec=65620&ifkv=AWnogHcdvj-hQyT4uKOCQIVfkr0lAhSZKJazrU70cbVN72ouMI3_9TTrSHyfxa6M9mwsYoxgTuPi&flowName=GlifWebSignIn&flowEntry=ServiceLogin'
-    await navigateToURL(tab, url);
-    await browser.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: async () => {
-            const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-            const list = document.getElementsByClassName('lCoei YZVTmd SmR8');
-            for (const item of [...list]) {
-                if (item.innerText.includes('khanhquocdo.test@gmail.com')) {
-                    item.click(); // Sử dụng tài khoản khác
-                    break;
-                }
-            }
-            await delay(2000);
-            document.getElementsByClassName('whsOnd zHQkBf')[0].value = 'Khanhquoc2901_'; // Nhập Mk
-            await delay(1000);
-            document.getElementsByClassName('VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-k8QpJ VfPpkd-LgbsSe-OWXEXe-dgl2Hf nCP5yc AjY5Oe DuMIQc LQeN7 qIypjc TrZEUc lw1w4b')[0].click() // Tiếp theo
-        }
-    });
-}
-
-async function loginGoogleIfNotLoggedIn() {
-    const tab = Tab.getSavedTab();
-    await navigateToURL(tab, 'https://www.google.com');
-    await browser.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => {
-            const loginBtn = document.getElementsByClassName('gb_ha gb_ia gb_ee gb_ed')[0];
-            if (loginBtn) browser.runtime.sendMessage({ loginGoogle: true });
-        }
-    });
-}
-
-async function doLoginGoogle() {
-    const tab = Tab.getSavedTab();
-    const url = 'https://accounts.google.com/ServiceLogin/signinchooser?hl=vi&passive=true&continue=https%3A%2F%2Fwww.google.com%2F&ec=GAZAmgQ&ifkv=AWnogHcRnNbUmW9EhPc6QoRyxIkXi1DQGtbiSWc-GGZhXi1RdrpSBth-fqcyLZjQIVM1KLpWlU2Ykw&flowName=GlifWebSignIn&flowEntry=ServiceLogin';
-    await navigateToURL(tab, url);
-    await browser.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: async () => {
-            const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-            const list = document.getElementsByClassName('lCoei YZVTmd SmR8');
-            for (const item of [...list]) {
-                if (item.innerText.includes('Sử dụng một tài khoản khác')) {
-                    console.log(item.innerText);
-                    item.click(); // Sử dụng tài khoản khác
-                    break;
-                }
-            }
-            await delay(2000);
-            document.getElementById('identifierId').value = 'khanhquocdo.test@gmail.com'; // Nhập tk
-            await delay(1000);
-            document.getElementsByClassName('VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-k8QpJ VfPpkd-LgbsSe-OWXEXe-dgl2Hf nCP5yc AjY5Oe DuMIQc LQeN7 qIypjc TrZEUc lw1w4b')[0].click() // Tiếp theo
-            await delay(2000);
-            document.getElementsByClassName('whsOnd zHQkBf')[0].value = 'Khanhquoc2901_'; // Nhập Mk
-            await delay(1000);
-            document.getElementsByClassName('VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-k8QpJ VfPpkd-LgbsSe-OWXEXe-dgl2Hf nCP5yc AjY5Oe DuMIQc LQeN7 qIypjc TrZEUc lw1w4b')[0].click() // Tiếp theo
-        }
-    });
 }
 
 async function getIp() {
@@ -194,28 +115,13 @@ async function doWatchVideo() {
     }
 
     async function search(title) {
-        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
         let formatTT = title.split(' ')
         formatTT = formatTT.filter((t) => t.length > 1)
         if (formatTT.length > 8) formatTT.splice(-Math.floor(Math.random() * 2) - 1)
-        const key = formatTT.join(' ');
-        const tab = Tab.getSavedTab();
-        await browser.tabs.executeScript(
-            tab.id,
-            { code: 'const key = ' + key },
-            function () {
-                browser.scripting.executeScript({
-                    target: { tabId: tab.id },
-                    func: async () => {
-                        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-                        document.getElementsByClassName('gsfi ytd-searchbox')[0].value = key;
-                        await delay(1000);
-                        document.getElementById('search-icon-legacy').click();
-                    },
-                });
-            }
-        )
-        await delay(6000);
+        const key = formatTT.join('+')
+        const url = 'https://www.youtube.com/results?search_query=' + key;
+        console.log(url);
+        await navigateToURL(tab, url);
     }
 
     async function watchVideo() {
@@ -227,8 +133,39 @@ async function doWatchVideo() {
                 title?.click();
             },
         })
-        const wait = Math.floor((Math.random() * 57) + 35); // 35 -> 91s
-        await delay(wait * 1000);
+        const wait = Math.floor((Math.random() * 5) + 15); // 35 -> 91s
+        const commentAt = Math.floor((Math.random() * 5) + 5); // 5s -> 10s 
+        await delay(commentAt * 1000);
+        await comment();
+        await delay((wait - commentAt) * 1000);
+    }
+
+    async function comment() {
+        chrome.tabs.executeScript(null, { file: "jquery.js" }, async function () {
+            await browser.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: async () => {
+                    const comments = ["I really love it", "It's look insane!", "It make my day 🥰", "", 'Lol 🤣', "Come and see my boy 😆", "Some one tell me what happend 🥶", "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "😉", "😊", "😇", "🥰", "😍", "🤩", "😘", "😗", "😋", "😛", "😜", "🤪", "😝", "🤑", "🤗", "🤭", "🤫", "😮‍💨", "🤤", "🥶", "🤠", "🥳", "😎", "🤓", "🧐", "😮", "😯", "😲", "😳"]
+                    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+                    window.scrollBy(0, 400);
+                    await delay(2000);
+                    document.getElementById('placeholder-area').click();
+                    await delay(1000);
+                    const index = Math.floor(Math.random() * comments.length);
+                    const comment = comments[index];
+                    document.getElementById("contenteditable-root").innerText = comment;
+                    comments.splice(index, 1);
+                    await delay(1000);
+                    const submitBtn = document.getElementsByClassName('yt-spec-button-shape-next yt-spec-button-shape-next--filled yt-spec-button-shape-next--disabled yt-spec-button-shape-next--size-m ')[0];
+                    submitBtn.classList.remove("yt-spec-button-shape-next--disabled");
+                    submitBtn.classList.add('yt-spec-button-shape-next--call-to-action');
+                    submitBtn.removeAttribute('disabled');
+                    submitBtn.click();
+                    await delay(4000);
+                    window.scrollBy(0, -400);
+                },
+            })
+        });
     }
 }
 
@@ -238,23 +175,6 @@ async function navigateToURL(tab, url, _delay) {
     await browser.tabs.update(tab?.id, { url: url });
     await delay(_delay ? _delay : 5000);
 }
-
-// /**
-//  * @param {*} task: function has return boolean (return true done task or repeat time hits limit)
-//  * @param {*} repeatTimeLimit 
-//  * @param {*} _delay: delay while repeat task
-//  */
-// const doTask = async (task, repeatTimeLimit, _delay) => {
-//     const repeat = repeatTimeLimit ? repeatTimeLimit : 10;
-//     let repeatCount = 0;
-//     let success = false;
-//     while (!success && (repeatCount < repeat)) {
-//         console.log('do task');
-//         success = task();
-//         repeatCount++;
-//         await delay(_delay ? _delay : 1000);
-//     }
-// }
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
