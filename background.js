@@ -136,11 +136,13 @@ async function doWatchVideo() {
         const wait = Math.floor((Math.random() * 5) + 15); // 35 -> 91s
         const commentAt = Math.floor((Math.random() * 5) + 5); // 5s -> 10s 
         await delay(commentAt * 1000);
-        await comment();
+        if (Math.floor(Math.random() * 5) === 0) { // 20% comment
+            comment();
+        };
         await delay((wait - commentAt) * 1000);
     }
 
-    async function comment() {
+    function comment() {
         chrome.tabs.executeScript(null, { file: "jquery.js" }, async function () {
             await browser.scripting.executeScript({
                 target: { tabId: tab.id },
