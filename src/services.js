@@ -1,11 +1,10 @@
 // HELPER
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function navigateToURL(tab, url, _delay) {
     await browser.tabs.update(tab?.id, { url: url });
     await delay(_delay ? _delay : 5000);
 }
-
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const executeScript = async (tabId, func, _delay) => {
     await browser.scripting.executeScript({

@@ -60,11 +60,24 @@ async function doWatchVideo() {
     const tab = Tab.getSavedTab();
     const videos = await getVideos();
     while (Running.getStatus()) {
+        //random video
         const index = Math.floor(Math.random() * videos.length);
         const video = videos[index];
         if (!video?.title) continue;
+
+        //search
         await search(video.title);
-        await watchVideo();
+
+        // watch video
+        if (Math.floor(Math.random() * 2) === 0) { // 0.1% watch video
+            await watchVideo();
+            continue;
+        }
+
+        //go to youtube home page
+        if (Math.floor(Math.random() * 5) === 0) {
+            await flexInYoutubeHomePage();
+        }
     }
 
     async function search(title) {
@@ -74,26 +87,37 @@ async function doWatchVideo() {
         const key = formatTT.join('+')
         const url = 'https://www.youtube.com/results?search_query=' + key;
         console.log(url);
-        await navigateToURL(tab, url);
+        await navigateToURL(tab, url, 8000);
     }
 
     async function watchVideo() {
-        if (Math.floor(Math.random() * 1000) !== 0) return; // 99,9% return 0.1% continue
+        // click title
         await executeScript(tab.id, () => {
             document.getElementsByClassName('yt-simple-endpoint style-scope ytd-video-renderer')[0]?.click();
         })
-        const wait = Math.floor((Math.random() * 57) + 35); // 35 -> 91s
-        const commentAt = Math.floor((Math.random() * 5) + 5); // 5s -> 10s 
-        await delay(commentAt * 1000);
+        const wait = Math.floor((Math.random() * 57) + 35) * 1000; // 35 -> 91s
+
+        // ALL code below excute done on $wait time
+
+        const commentAt = Math.floor((Math.random() * 5) + 5) * 1000; // 5s -> 10s 
+        await delay(commentAt);
+
+        // comment
         if (Math.floor(Math.random() * 5) === 0) { // 20% comment
-            comment();
+            await comment();
         };
-        await delay((wait - commentAt) * 1000);
+        const commentTime = 6500; // 6.5s
+
+        //scroll down
+        await scrollDown();
+        const scrollTime = 8000; // 8s
+
+        await delay(wait - commentAt - commentTime - scrollTime);
     }
 
     async function comment() {
         await executeScript(tab.id, async () => {
-            const comments = ["I really love it", "It's look insane!", "It make my day 🥰", ":)))))", 'Lol 🤣', "Come and see my boy 😆", "Some one tell me what happend 🥶", "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "😉", "😊", "😇", "🥰", "😍", "🤩", "😘", "😗", "😋", "😛", "😜", "🤪", "😝", "🤑", "🤗", "🤭", "🤫", "😮‍💨", "🤤", "🥶", "🤠", "🥳", "😎", "🤓", "🧐", "😮", "😯", "😲", "😳"]
+            const comments = ["I really love it", "It's look insane!", "It make my day 🥰", ":)))))", 'Lol 🤣', "Come and see my boy 😆", "Some one tell me what happend 🥶", "OMG!!", "Ohh 😮", "Great :))))", "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂"]
             const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
             window.scrollBy(0, 400);
             await delay(2000);
@@ -109,8 +133,33 @@ async function doWatchVideo() {
             submitBtn.classList.add('yt-spec-button-shape-next--call-to-action');
             submitBtn.removeAttribute('disabled');
             submitBtn.click();
-            await delay(4000);
-            window.scrollBy(0, -400);
+            await delay(2000);
         });
     }
+
+    async function scrollDown() {
+        await executeScript(tab.id, async () => {
+            const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+            const viewHeight = window.innerHeight;
+            for (let i = 0; i < 5; i++) {
+                window.scrollBy(0, viewHeight);
+                await delay(1000)
+            }
+            await delay(3000);
+            window.scrollBy(0, -(viewHeight * 5 + 400));
+        })
+    }
+}
+
+async function flexInYoutubeHomePage() {
+    const tab = Tab.getSavedTab();
+    await navigateToURL(tab, "https://www.youtube.com/");
+    await executeScript(tab.id, async () => {
+        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        const viewHeight = window.innerHeight;
+        for (let i = 0; i < 5; i++) {
+            window.scrollBy(0, viewHeight);
+            await delay(1400)
+        }
+    })
 }

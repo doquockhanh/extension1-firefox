@@ -10,9 +10,9 @@
     },
     "background": {
         "scripts": [
-            "src/background.js",
             "src/entities.js",
-            "src/services.js"
+            "src/services.js",
+            "src/background.js"
         ],
         "persistent": false
     },
